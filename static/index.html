@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/style.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/macy@2"></script>
+        <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+        <script src="https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+    </head>
+    <body>
+        <div id="images-grid" x-data="initGrid()">
+            <div class="grid__col-sizer"></div>
+            <div class="grid__gutter-sizer"></div>
+        </div>
+
+        <div class="page-load-status"></div>
+
+        <script>
+            function getItemHTML({ url }) {
+                return `<div class="grid-item"><img src="${url}"></div>`;
+            }
+
+            function initGrid() {
+                let msnry = new Masonry('#images-grid', {
+                    itemSelector: '.grid-item',
+                    columnWidth: '.grid__col-sizer',
+                    gutter: '.grid__gutter-sizer',
+                    percentPosition: true,
+                    stagger: 30,
+                    visibleStyle: { transform: 'translateY(0)', opacity: 1 },
+                    hiddenStyle: { transform: 'translateY(100px)', opacity: 0 },
+                });
+
+                let infScroll = new InfiniteScroll('#images-grid', {
+                    path() {
+                        return `/api/images?page=${this.pageIndex}`;
+                    },
+                    responseBody: 'json',
+                    outlayer: msnry,
+                    status: '.page-load-status',
+                    history: false,
+                });
+
+                let proxyElem = document.createElement('div');
+
+                infScroll.on('load', function({ images }) {
+                    proxyElem.innerHTML = images.map(getItemHTML).join('');
+
+                    let items = proxyElem.querySelectorAll('.grid-item');
+
+                    imagesLoaded( items, function() {
+                        infScroll.appendItems( items );
+                        msnry.appended( items );
+                    });
+                });
+
+                infScroll.loadNextPage();
+
+                return {};
+            }
+        </script>
+    </body>
+</html>

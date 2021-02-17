@@ -1,0 +1,14 @@
+.grid__col-sizer,
+.grid-item{
+    width: 32%;
+}
+
+.grid__gutter-sizer {
+    width: 0.5%;
+}
+
+#images-grid img {
+    margin-bottom: 7px;
+    max-width: 100%;
+    max-height: 100%;
+}
