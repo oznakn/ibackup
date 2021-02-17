@@ -2,9 +2,10 @@ package storage
 
 import (
 	"bytes"
+	"context"
+	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"log"
-	"context"
 	"net/url"
 	"time"
 
@@ -14,11 +15,14 @@ import (
 
 var minioClient *minio.Client
 var ctx context.Context
+var c *cache.Cache
 
 func Init() {
 	var err error
 
 	ctx = context.Background()
+
+	c = cache.New(time.Hour, 15*time.Minute)
 
 	endpoint := "odroid.oznakn.com:9000"
 	accessKeyID := "minioadmin"
@@ -37,6 +41,9 @@ func Init() {
 	log.Println("Minio client created.")
 }
 
+func CleanCache() {
+	c.DeleteExpired()
+}
 
 func Upload(name string, data []byte) bool {
 	reader := bytes.NewReader(data)
@@ -68,11 +75,19 @@ func Get(name string) ([]byte, error) {
 }
 
 func GetURL(name string) (*url.URL, error) {
-	result, err := minioClient.PresignedGetObject(ctx, "photos", name, time.Second * 60 * 15, nil)
+	cached, found := c.Get(name)
+
+	if found {
+		return cached.(*url.URL), nil
+	}
+
+	result, err := minioClient.PresignedGetObject(ctx, "photos", name, time.Second * 60 * 60, nil)
 
 	if err != nil {
 		return nil, err
 	}
+
+	c.Set(name, result, cache.DefaultExpiration)
 
 	return result, nil
 }

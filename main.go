@@ -16,6 +16,8 @@ import (
 	"strconv"
 )
 
+const PageSize = 10
+
 func Home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -30,7 +32,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		offset = (page - 1) * 2
+		offset = (page - 1) * PageSize
 
 		if offset < 0 {
 			offset = 0
@@ -38,7 +40,9 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var images []db.Image
-	db.Conn.Order("created_at DESC").Offset(offset).Limit(20).Find(&images)
+	db.Conn.Order("created_at DESC").Offset(offset).Limit(PageSize).Find(&images)
+
+	storage.CleanCache()
 
 	result := make([]map[string]string, len(images))
 
@@ -67,12 +71,13 @@ func Home(w http.ResponseWriter, r *http.Request) {
 func Upload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	r.ParseMultipartForm(10 << 20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
 	file, handler, err := r.FormFile("file")
-	source := r.FormValue("source")
-	path := r.FormValue("path")
-
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -80,6 +85,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
+	source := r.FormValue("source")
+	path := r.FormValue("path")
 	if source == "" || path == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
