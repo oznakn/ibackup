@@ -1,4 +1,4 @@
-package storage
+package main
 
 import (
 	"bytes"
@@ -17,21 +17,16 @@ var minioClient *minio.Client
 var ctx context.Context
 var c *cache.Cache
 
-func Init() {
+func storageInit(endpoint string, accessKey string, secretKey string) {
 	var err error
 
 	ctx = context.Background()
 
 	c = cache.New(time.Hour, 15*time.Minute)
 
-	endpoint := "odroid.oznakn.com:9000"
-	accessKeyID := "minioadmin"
-	secretAccessKey := "minioadmin"
-	useSSL := false
-
 	minioClient, err = minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
-		Secure: useSSL,
+		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure: false,
 	})
 
 	if err != nil {
@@ -41,11 +36,11 @@ func Init() {
 	log.Println("Minio client created.")
 }
 
-func CleanCache() {
+func cleanStorageCache() {
 	c.DeleteExpired()
 }
 
-func Upload(name string, data []byte) bool {
+func uploadImage(name string, data []byte) bool {
 	reader := bytes.NewReader(data)
 
 	_, err := minioClient.PutObject(ctx, "photos", name, reader, int64(len(data)), minio.PutObjectOptions{})
@@ -57,7 +52,7 @@ func Upload(name string, data []byte) bool {
 	return true
 }
 
-func Get(name string) ([]byte, error) {
+func fetchImage(name string) ([]byte, error) {
 	result, err := minioClient.GetObject(ctx, "photos", name, minio.GetObjectOptions{})
 	defer result.Close()
 
@@ -74,7 +69,7 @@ func Get(name string) ([]byte, error) {
 	return data, nil
 }
 
-func GetURL(name string) (*url.URL, error) {
+func fetchImageUrl(name string) (*url.URL, error) {
 	cached, found := c.Get(name)
 
 	if found {
