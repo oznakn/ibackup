@@ -6,12 +6,35 @@
             }
 
             .grid__col-sizer,
-            .grid-item{
-                width: 24%;
+            .grid-item {
+                width: 49%;
+            }
+
+            @media screen and (min-width: 800px) {
+                .grid__col-sizer,
+                .grid-item {
+                    width: 32%;
+                }
+            }
+
+            @media screen and (min-width: 1200px) {
+                .grid__col-sizer,
+                .grid-item {
+                    width: 24%;
+                }
+            }
+
+            .grid-item-full {
+                width: 100%;
             }
 
             .grid__gutter-sizer {
                 width: 0.5%;
+            }
+
+            .grid-item h3 {
+                font-size: 2rem;
+                padding: 5px 10px;
             }
 
             #images-grid img {
@@ -78,6 +101,11 @@
                 background: #eee;
                 padding: 20px;
             }
+
+            #modal div:nth-child(3) span {
+                display: block;
+                margin: 10px 0;
+            }
         </style>
 
         <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
@@ -111,17 +139,42 @@
                 return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
             }
 
-            function showModal(src, devicePath, source, takenAt, uploadedAt, size) {
+            function padLeft(n) {
+                if (n < 10) return `0${n}`;
+                return `${n}`;
+            }
+
+            function toDateString(date) {
+                return `${date.getDay()}.${padLeft(date.getMonth()+1)}.${date.getFullYear()} ${padLeft(date.getHours())}:${padLeft(date.getMinutes())}`;
+            }
+
+            function deleteItem(name) {
+                fetch(`/api/delete?name=${encodeURIComponent(name)}`);
+
+                closeModal();
+
+                let $element = document.querySelector(`[x-data="${name}"]`);
+                window.msnry.remove([$element]);
+                window.msnry.layout();
+            }
+
+            function downloadItem(url) {
+                window.open(url);
+            }
+
+            function showModal(name, src, devicePath, source, takenAt, uploadedAt, size) {
                 let $modal = document.getElementById("modal");
                 $modal.style.display = 'flex';
 
                 $modal.getElementsByTagName("img")[0].src = src;
-                $modal.getElementsByTagName("p")[0].innerText = `
-                    DevicePath: ${devicePath}
-                    Source: ${source}
-                    Taken At: ${takenAt}
-                    Uploaded At: ${uploadedAt}
-                    Size: ${bytesToSize(size)}
+                $modal.getElementsByTagName("p")[0].innerHTML = `
+                    <span><b>DevicePath:</b> ${devicePath}</span>
+                    <span><b>Source:</b> ${source}</span>
+                    <span><b>Taken At:</b> ${toDateString(new Date(takenAt))}</span>
+                    <span><b>Uploaded At:</b> ${toDateString(new Date(uploadedAt))}</span>
+                    <span><b>Size:</b> ${bytesToSize(size)}</span>
+                    <span><button onclick="deleteItem('${name}')">Delete</button></span>
+                    <span><button onclick="downloadItem('${src}')">Download</button></span>
                 `;
             }
 
@@ -130,44 +183,64 @@
                 $modal.style.display = 'none';
 
                 $modal.getElementsByTagName("img")[0].src = '';
-                $modal.getElementsByTagName("p")[0].innerText = '';
+                $modal.getElementsByTagName("p")[0].innerHTML = '';
             }
 
             document.addEventListener("DOMContentLoaded", () => {
-                let msnry = new Masonry('#images-grid', {
+                window.msnry = new Masonry('#images-grid', {
                     itemSelector: '.grid-item',
                     columnWidth: '.grid__col-sizer',
                     gutter: '.grid__gutter-sizer',
                     percentPosition: true,
+                    horizontalOrder: true,
                     stagger: 30,
                     visibleStyle: { transform: 'translateY(0)', opacity: 1 },
                     hiddenStyle: { transform: 'translateY(100px)', opacity: 0 },
                 });
 
-                let infScroll = new InfiniteScroll('#images-grid', {
+                window.infScroll = new InfiniteScroll('#images-grid', {
                     path() {
                         return `/api/images?page=${this.pageIndex}`;
                     },
                     responseBody: 'json',
-                    outlayer: msnry,
+                    outlayer: window.msnry,
                     status: '.page-load-status',
                     history: false,
                 });
 
                 let proxyElem = document.createElement('div');
 
+                let lastMonth = -1;
+                let lastYear = -1;
+
                 infScroll.on('load', function({ images }) {
-                    proxyElem.innerHTML = images.map(({url, devicePath, source, takenAt, uploadedAt, size}) =>
-                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${takenAt}', '${uploadedAt}', ${size})">
-                            <img src="${url}">
-                        </div>`
-                    ).join('');
+                    proxyElem.innerHTML = images.map(({name, url, devicePath, source, takenAt, uploadedAt, size}) => {
+                        let preHtml = '';
+
+                        let date = new Date(takenAt);
+
+                        if (date.getMonth() !== lastMonth || date.getFullYear() !== lastYear) {
+                            console.log(date.getMonth(), lastMonth, date.getFullYear(), lastYear);
+                            preHtml = `<div class="grid-item grid-item-full">
+                                <h3>${padLeft(date.getMonth()+1)}.${date.getFullYear()}</h3>
+                            </div>`;
+                            lastMonth = date.getMonth();
+                            lastYear = date.getFullYear();
+                        }
+
+                        return `${preHtml}
+                            <div class="grid-item"
+                                x-data="${name}"
+                                onclick="showModal('${name}', '${url}', '${devicePath}', '${source}', '${takenAt}', '${uploadedAt}', ${size})">
+                                <img src="${url}">
+                            </div>`;
+                    }).join('');
 
                     let items = proxyElem.querySelectorAll('.grid-item');
 
-                    imagesLoaded( items, function() {
-                        infScroll.appendItems( items );
-                        msnry.appended( items );
+                    imagesLoaded(items, function() {
+                        window.infScroll.appendItems(items);
+                        window.msnry.appended(items);
                     });
                 });
 

@@ -86,3 +86,13 @@ func fetchImageUrl(name string) (*url.URL, error) {
 
 	return result, nil
 }
+
+func deleteImage(name string) error {
+	err := minioClient.RemoveObject(ctx, "photos", name, minio.RemoveObjectOptions{})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

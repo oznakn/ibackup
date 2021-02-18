@@ -39,7 +39,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var images []Image
-	Conn.Order("created_at DESC").Offset(offset).Limit(PageSize).Find(&images)
+	Conn.Order("taken_at DESC").Offset(offset).Limit(PageSize).Find(&images)
 
 	cleanStorageCache()
 
@@ -170,9 +170,40 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	name := r.FormValue("name")
+
+	if name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	var image Image
+	if err := Conn.Where("filename = ?", name).Delete(&image).Error; err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err := deleteImage(name)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string {
+		"status": "deleted",
+	})
+}
+
 func startServer(bindAddress string) {
 	http.HandleFunc("/api/images", HomeHandler)
 	http.HandleFunc("/api/upload", UploadHandler)
+	http.HandleFunc("/api/delete", DeleteHandler)
 	http.Handle("/", http.FileServer(rice.MustFindBox("./static").HTTPBox()))
 
 	log.Printf("Server started at %s.", bindAddress)
