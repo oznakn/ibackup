@@ -11,5 +11,6 @@ type Image struct {
 	DevicePath string
 	Filename string `gorm:"index"`
 	Hash string `gorm:"index"`
+	Size uint
 	TakenAt time.Time
 }

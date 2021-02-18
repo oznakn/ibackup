@@ -149,6 +149,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			DevicePath: path,
 			Filename: filename,
 			Hash: hash,
+			Size: uint(len(fileBytes)),
 			TakenAt: date,
 		}
 
