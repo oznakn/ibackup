@@ -8,12 +8,12 @@ import (
 	"github.com/oznakn/ibackup-server/db"
 	"github.com/oznakn/ibackup-server/storage"
 	"github.com/rs/xid"
-	"io/ioutil"
 	"log"
 	"lukechampine.com/blake3"
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -104,9 +104,14 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	date := time.Unix(dateAsInt, 0)
+	ext := strings.ToLower(filepath.Ext(handler.Filename))
 
-	fileBytes, err := ioutil.ReadAll(file)
+	fileBytes, err := compressIfPossible(file, ext)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	hashAsBytes := blake3.Sum512(fileBytes)
 	hash := hex.EncodeToString(hashAsBytes[:])
 
@@ -137,12 +142,14 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 		storage.Upload(filename, fileBytes)
 
+		date := time.Unix(dateAsInt, 0)
+
 		image := db.Image{
 			Source: source,
 			DevicePath: path,
 			Filename: filename,
-			TakenAt: date,
 			Hash: hash,
+			TakenAt: date,
 		}
 
 		db.Conn.Create(&image)

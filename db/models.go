@@ -10,6 +10,6 @@ type Image struct {
 	Source string
 	DevicePath string
 	Filename string `gorm:"index"`
-	Hash string
+	Hash string `gorm:"index"`
 	TakenAt time.Time
 }
