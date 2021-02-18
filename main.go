@@ -44,7 +44,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 
 	storage.CleanCache()
 
-	result := make([]map[string]string, len(images))
+	result := make([]map[string]interface{}, len(images))
 
 	for i, image := range images {
 		imageURL, err := storage.GetURL(image.Filename)
@@ -55,9 +55,11 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		result[i] = map[string]string{
+		result[i] = map[string]interface{}{
 			"devicePath": image.DevicePath,
+			"source": image.Source,
 			"name": image.Filename,
+			"date": image.CreatedAt,
 			"url": imageURL.String(),
 		}
 	}

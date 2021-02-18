@@ -1,26 +1,130 @@
 <html>
     <head>
-        <link rel="stylesheet" href="/style.css">
-
-        <script src="https://cdn.jsdelivr.net/npm/macy@2"></script>
-        <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
-        <script src="https://unpkg.com/infinite-scroll@4/dist/infinite-scroll.pkgd.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
-    </head>
-    <body>
-        <div id="images-grid" x-data="initGrid()">
-            <div class="grid__col-sizer"></div>
-            <div class="grid__gutter-sizer"></div>
-        </div>
-
-        <div class="page-load-status"></div>
-
-        <script>
-            function getItemHTML({ url }) {
-                return `<div class="grid-item"><img src="${url}"></div>`;
+        <style>
+            html {
+                font-family: '.AppleSystemUIFont', 'Helvetica', sans-serif;
             }
 
-            function initGrid() {
+            .grid__col-sizer,
+            .grid-item{
+                width: 24%;
+            }
+
+            .grid__gutter-sizer {
+                width: 0.5%;
+            }
+
+            #images-grid img {
+                margin-bottom: 7px;
+                max-width: 100%;
+                max-height: 100%;
+                cursor: pointer;
+            }
+
+            #modal {
+                z-index: 100;
+                position: fixed;
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+
+                flex-flow: row nowrap;
+
+                background: rgba(0, 0, 0, 0.7);
+            }
+
+            #modal div:nth-child(1) {
+                cursor: pointer;
+
+                width: 40px;
+                height: 40px;
+
+                position: absolute;
+                left: 10px;
+                top: 10px;
+                background: rgba(255, 255, 255, 0.5);
+                border-radius: 50%;
+            }
+
+            #modal div:nth-child(1) span {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translateX(-50%) translateY(-50%);
+
+                font-size: 30px;
+            }
+
+            #modal div:nth-child(2) {
+                flex-basis: 75%;
+                display: flex;
+                flex-flow: row nowrap;
+                justify-content: center;
+            }
+
+            #modal img {
+                max-width: 100%;
+                max-height: 100vh;
+                object-fit: contain;
+            }
+
+            #modal div:nth-child(3) {
+                flex-basis: 25%;
+                display: flex;
+                flex-flow: column nowrap;
+                color: #222;
+
+                background: #eee;
+                padding: 20px;
+            }
+        </style>
+
+        <script src="https://unpkg.com/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"></script>
+        <script src="https://unpkg.com/infinite-scroll@4.0.1/dist/infinite-scroll.pkgd.min.js"></script>
+    </head>
+    <body>
+        <div>
+            <div id="images-grid">
+                <div class="grid__col-sizer"></div>
+                <div class="grid__gutter-sizer"></div>
+            </div>
+
+            <div class="page-load-status"></div>
+
+            <div id="modal" style="display: none">
+                <div onclick="closeModal()"><span>&#8855;</span></div>
+
+                <div><img></div>
+
+                <div>
+                    <p></p>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            function showModal(src, devicePath, source, date) {
+                let $modal = document.getElementById("modal");
+                $modal.style.display = 'flex';
+
+                $modal.getElementsByTagName("img")[0].src = src;
+                $modal.getElementsByTagName("p")[0].innerText = `
+                    DevicePath: ${devicePath}
+                    Source: ${source}
+                    Upload Date: ${date}
+                `;
+            }
+
+            function closeModal() {
+                let $modal = document.getElementById("modal");
+                $modal.style.display = 'none';
+
+                $modal.getElementsByTagName("img")[0].src = '';
+                $modal.getElementsByTagName("p")[0].innerText = '';
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
                 let msnry = new Masonry('#images-grid', {
                     itemSelector: '.grid-item',
                     columnWidth: '.grid__col-sizer',
@@ -44,7 +148,11 @@
                 let proxyElem = document.createElement('div');
 
                 infScroll.on('load', function({ images }) {
-                    proxyElem.innerHTML = images.map(getItemHTML).join('');
+                    proxyElem.innerHTML = images.map(({url, devicePath, source, date}) =>
+                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${date}')">
+                            <img src="${url}">
+                        </div>`
+                    ).join('');
 
                     let items = proxyElem.querySelectorAll('.grid-item');
 
@@ -55,9 +163,7 @@
                 });
 
                 infScroll.loadNextPage();
-
-                return {};
-            }
+            });
         </script>
     </body>
 </html>
