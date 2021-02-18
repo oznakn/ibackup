@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 const PageSize = 10
@@ -59,7 +60,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			"devicePath": image.DevicePath,
 			"source": image.Source,
 			"name": image.Filename,
-			"date": image.CreatedAt,
+			"takenAt": image.TakenAt,
+			"uploadedAt": image.CreatedAt,
 			"url": imageURL.String(),
 		}
 	}
@@ -89,10 +91,20 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 
 	source := r.FormValue("source")
 	path := r.FormValue("path")
-	if source == "" || path == "" {
+	dateAsString := r.FormValue("date")
+	if source == "" || path == "" || dateAsString == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	dateAsInt, err := strconv.ParseInt(dateAsString, 10, 64)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	date := time.Unix(dateAsInt, 0)
 
 	fileBytes, err := ioutil.ReadAll(file)
 	hashAsBytes := blake3.Sum512(fileBytes)
@@ -129,6 +141,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			Source: source,
 			DevicePath: path,
 			Filename: filename,
+			TakenAt: date,
 			Hash: hash,
 		}
 

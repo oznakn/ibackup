@@ -104,7 +104,7 @@
         </div>
 
         <script>
-            function showModal(src, devicePath, source, date) {
+            function showModal(src, devicePath, source, takenAt, uploadedAt) {
                 let $modal = document.getElementById("modal");
                 $modal.style.display = 'flex';
 
@@ -112,7 +112,8 @@
                 $modal.getElementsByTagName("p")[0].innerText = `
                     DevicePath: ${devicePath}
                     Source: ${source}
-                    Upload Date: ${date}
+                    Taken At: ${takenAt}
+                    Uploaded At: ${uploadedAt}
                 `;
             }
 
@@ -148,8 +149,8 @@
                 let proxyElem = document.createElement('div');
 
                 infScroll.on('load', function({ images }) {
-                    proxyElem.innerHTML = images.map(({url, devicePath, source, date}) =>
-                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${date}')">
+                    proxyElem.innerHTML = images.map(({url, devicePath, source, takenAt, uploadedAt}) =>
+                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${takenAt}', '${uploadedAt}')">
                             <img src="${url}">
                         </div>`
                     ).join('');
