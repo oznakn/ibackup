@@ -1,4 +1,4 @@
-module github.com/oznakn/ibackup-server
+module github.com/oznakn/ibackup
 
 go 1.15
 
