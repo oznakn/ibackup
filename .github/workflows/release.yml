@@ -10,11 +10,11 @@ jobs:
       fail-fast: false
       matrix:
         target: [
-          { "os": "linux",   "arch": "arm",   "upx": true,  "command": "CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ CGO_ENABLED=1 go build" },
-          { "os": "linux",   "arch": "arm64", "upx": false, "command": "CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnueabihf-g++ CGO_ENABLED=1 go build" },
-          { "os": "linux",   "arch": "amd64", "upx": true,  "command": "go build" },
-          { "os": "windows", "arch": "amd64", "upx": true,  "command": "go build" },
-          { "os": "darwin",  "arch": "amd64", "upx": true,  "command": "go build" },
+          { "os": "linux",   "arch": "arm",   "command": "CC=arm-linux-gnueabihf-gcc CXX=arm-linux-gnueabihf-g++ CGO_ENABLED=1 go build" },
+          { "os": "linux",   "arch": "arm64", "command": "CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnueabihf-g++ CGO_ENABLED=1 go build" },
+          { "os": "linux",   "arch": "amd64", "command": "go build" },
+          { "os": "windows", "arch": "amd64", "command": "go build" },
+          { "os": "darwin",  "arch": "amd64", "command": "go build" },
         ]
     steps:
       - uses: actions/checkout@v2
@@ -26,4 +26,4 @@ jobs:
           build_command: ${{ matrix.target.command }}
           pre_command: "go get github.com/GeertJohan/go.rice && go get github.com/GeertJohan/go.rice/rice && rice embed-go"
           overwrite: true
-          upx: ${{ matrix.target.upx }}
+          upx: true
