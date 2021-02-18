@@ -62,6 +62,7 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			"name": image.Filename,
 			"takenAt": image.TakenAt,
 			"uploadedAt": image.CreatedAt,
+			"size": image.Size,
 			"url": imageURL.String(),
 		}
 	}

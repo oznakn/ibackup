@@ -104,7 +104,14 @@
         </div>
 
         <script>
-            function showModal(src, devicePath, source, takenAt, uploadedAt) {
+            function bytesToSize(bytes) {
+                let sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+                if (bytes === 0) return '0 Byte';
+                let i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+                return Math.round(bytes / Math.pow(1024, i), 2) + ' ' + sizes[i];
+            }
+
+            function showModal(src, devicePath, source, takenAt, uploadedAt, size) {
                 let $modal = document.getElementById("modal");
                 $modal.style.display = 'flex';
 
@@ -114,6 +121,7 @@
                     Source: ${source}
                     Taken At: ${takenAt}
                     Uploaded At: ${uploadedAt}
+                    Size: ${bytesToSize(size)}
                 `;
             }
 
@@ -149,8 +157,8 @@
                 let proxyElem = document.createElement('div');
 
                 infScroll.on('load', function({ images }) {
-                    proxyElem.innerHTML = images.map(({url, devicePath, source, takenAt, uploadedAt}) =>
-                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${takenAt}', '${uploadedAt}')">
+                    proxyElem.innerHTML = images.map(({url, devicePath, source, takenAt, uploadedAt, size}) =>
+                        `<div class="grid-item" onclick="showModal('${url}', '${devicePath}', '${source}', '${takenAt}', '${uploadedAt}', ${size})">
                             <img src="${url}">
                         </div>`
                     ).join('');
