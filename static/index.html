@@ -145,7 +145,7 @@
             }
 
             function toDateString(date) {
-                return `${date.getDay()}.${padLeft(date.getMonth()+1)}.${date.getFullYear()} ${padLeft(date.getHours())}:${padLeft(date.getMinutes())}`;
+                return `${padLeft(date.getDate())}.${padLeft(date.getMonth()+1)}.${date.getFullYear()} ${padLeft(date.getHours())}:${padLeft(date.getMinutes())}`;
             }
 
             function deleteItem(name) {
@@ -220,12 +220,12 @@
 
                         let date = new Date(takenAt);
 
-                        if (date.getDay() !== lastDay || date.getMonth() !== lastMonth || date.getFullYear() !== lastYear) {
+                        if (date.getDate() !== lastDay || date.getMonth() !== lastMonth || date.getFullYear() !== lastYear) {
                             preHtml = `<div class="grid-item grid-item-full">
-                                <h3>${padLeft(date.getDay())}.${padLeft(date.getMonth()+1)}.${date.getFullYear()}</h3>
+                                <h3>${padLeft(date.getDate())}.${padLeft(date.getMonth()+1)}.${date.getFullYear()}</h3>
                             </div>`;
 
-                            lastDay = date.getDay();
+                            lastDay = date.getDate();
                             lastMonth = date.getMonth();
                             lastYear = date.getFullYear();
                         }
