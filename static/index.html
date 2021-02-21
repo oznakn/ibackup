@@ -210,6 +210,7 @@
 
                 let proxyElem = document.createElement('div');
 
+                let lastDay = -1;
                 let lastMonth = -1;
                 let lastYear = -1;
 
@@ -219,11 +220,12 @@
 
                         let date = new Date(takenAt);
 
-                        if (date.getMonth() !== lastMonth || date.getFullYear() !== lastYear) {
-                            console.log(date.getMonth(), lastMonth, date.getFullYear(), lastYear);
+                        if (date.getDay() !== lastDay || date.getMonth() !== lastMonth || date.getFullYear() !== lastYear) {
                             preHtml = `<div class="grid-item grid-item-full">
-                                <h3>${padLeft(date.getMonth()+1)}.${date.getFullYear()}</h3>
+                                <h3>${padLeft(date.getDay())}.${padLeft(date.getMonth()+1)}.${date.getFullYear()}</h3>
                             </div>`;
+
+                            lastDay = date.getDay();
                             lastMonth = date.getMonth();
                             lastYear = date.getFullYear();
                         }
